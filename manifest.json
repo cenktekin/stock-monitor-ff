@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Stock Monitor",
-  "version": "2.2",
+  "version": "2.2.1",
   "description": "Yahoo Finance tabanlı hisse/crypto/döviz takip - KDE widget portu",
   "permissions": [
     "storage",
