@@ -466,23 +466,23 @@ document.getElementById("exportBtn")?.addEventListener("click", async ()=>{
 document.getElementById("importBtn")?.addEventListener("click", ()=> document.getElementById("importFile").click());
 document.getElementById("importFile")?.addEventListener("change", async (e)=>{
   const f=e.target.files[0]; if(!f) return;
+  const st=document.getElementById("backupStatus");
   try{
     const text=await f.text();
     const j=JSON.parse(text);
     const cfgJ=j.config || j;
-    const next={};
-    for(const k of Object.keys(DEFAULTS)){
-      if(k in cfgJ) next[k]=cfgJ[k];
-    }
-    if("portfolioData" in cfgJ) next.portfolioData=cfgJ.portfolioData;
-    await browser.storage.local.set({config: next});
+    // Robust: take everything from file's config, plus ensure defaults for missing keys
+    const next = {...DEFAULTS, ...cfgJ};
+    // Remove any _meta noise if present at top level
+    delete next._meta;
+    // Persist via helper to ensure correct shape
+    await setConfig(next);
     if(j.data) await browser.storage.local.set({data: j.data});
     try{ await browser.runtime.sendMessage({type:"configChanged"}); }catch(_){}
-    const st=document.getElementById("backupStatus");
-    if(st){ st.style.display="block"; st.textContent="✓ Import edildi: "+Object.keys(next).length+" ayar yüklendi. Sayfa yenileniyor..."; }
-    setTimeout(()=> location.reload(), 800);
+    if(st){ st.style.display="block"; st.textContent="✓ Import edildi ("+f.name+"): ticker="+next.ticker+" interval="+next.refreshInterval+" activeHours="+(next.limitHours?"✓":"✗")+" "+next.startHour+":"+String(next.startMinute).padStart(2,"0")+"-"+next.endHour+":"+String(next.endMinute).padStart(2,"0"); }
+    setTimeout(()=> location.reload(), 900);
   }catch(err){
-    const st=document.getElementById("backupStatus");
+    console.error("Import failed", err);
     if(st){ st.style.display="block"; st.textContent="✗ Import hatası: "+err.message; }
   } finally { e.target.value=""; }
 });
