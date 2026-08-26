@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div id="app" class="loading">
+
+    <!-- Header: single mode = ticker/name + change badges -->
+    <div class="header" id="header">
+      <div class="header-left">
+        <div class="ticker-row">
+          <span class="arrow" id="arrow">▲</span>
+          <span class="ticker" id="ticker">AAPL</span>
+        </div>
+        <div class="company" id="company">Loading...</div>
+      </div>
+      <div class="header-right">
+        <div class="pct badge" id="pct">+0.00%</div>
+        <div class="change" id="change">+0.00</div>
+      </div>
+    </div>
+
+    <!-- Compact panel badge: multi mode (panel ticker = first or override) -->
+    <div class="panel-badge hidden" id="panelBadge">
+      <div class="panel-row">
+        <span class="panel-ticker" id="panelTicker">AAPL</span>
+        <span class="arrow" id="panelArrow">▲</span>
+      </div>
+      <div class="panel-row">
+        <span class="panel-price" id="panelPrice">---</span>
+        <span class="pct badge" id="panelPct">+0.00%</span>
+      </div>
+    </div>
+
+    <!-- Single view: chart + big price -->
+    <div class="single-view" id="singleView">
+      <div class="chart-wrap">
+        <canvas id="chartCanvas" width="380" height="120"></canvas>
+        <div id="chartEmpty" class="chart-empty hidden">Loading chart...</div>
+      </div>
+      <div class="price-big" id="priceBig">---</div>
+    </div>
+
+    <!-- Range selector -->
+    <div class="range-bar" id="rangeBar">
+      <button data-range="1D" class="active">1D</button>
+      <button data-range="5D">5D</button>
+      <button data-range="1M">1M</button>
+      <button data-range="6M">6M</button>
+      <button data-range="YTD">YTD</button>
+      <button data-range="1Y">1Y</button>
+      <button data-range="5Y">5Y</button>
+      <button data-range="Max">Max</button>
+    </div>
+
+    <!-- Multi list -->
+    <div id="multiList" class="multi-list hidden"></div>
+
+    <!-- Footer: lastUpdated • nextUpdate + refresh + options -->
+    <div class="footer">
+      <span class="timestamps" id="timestamps"></span>
+      <div class="footer-actions">
+        <button id="refreshBtn" title="Yenile (orta tık gibi)">↻</button>
+        <a href="#" id="openOptions" title="Ayarlar">⚙</a>
+      </div>
+    </div>
+
+  </div>
+<script src="../utils/storage.js"></script>
+<script src="../utils/format.js"></script>
+<script src="popup.js"></script>
+</body>
+</html>

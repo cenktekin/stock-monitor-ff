@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Monitor — Options</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <header class="page-header">
+    <h1>Stock Monitor</h1>
+    <p class="subtitle">Yahoo Finance tabanlı hisse / crypto / döviz takip</p>
+  </header>
+
+  <nav class="tab-bar" role="tablist" aria-label="Settings sections">
+    <button class="tab active" data-tab="general" role="tab" aria-selected="true">General</button>
+    <button class="tab" data-tab="search" role="tab" aria-selected="false">Search</button>
+    <button class="tab" data-tab="panel" role="tab" aria-selected="false">Panel</button>
+    <button class="tab" data-tab="portfolio" role="tab" aria-selected="false">Portfolio</button>
+    <button class="tab" data-tab="appearance" role="tab" aria-selected="false">Appearance</button>
+    <button class="tab" data-tab="backup" role="tab" aria-selected="false">Backup</button>
+  </nav>
+
+  <main>
+    <!-- ============ GENERAL ============ -->
+    <section id="tab-general" class="tab-section active" data-tab="general" role="tabpanel">
+      <h2>General</h2>
+      <div class="form-grid">
+
+        <div class="form-row">
+          <label class="form-label" for="isMultiMode">Display Mode:</label>
+          <div class="form-control">
+            <label class="check-row">
+              <input type="checkbox" id="isMultiMode">
+              <span>Show Multi-Stock List</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-row" id="row-showTwoList">
+          <label class="form-label" for="showTwoList">Two List:</label>
+          <div class="form-control">
+            <label class="check-row">
+              <input type="checkbox" id="showTwoList">
+              <span>single-stock on left side and multi-stock on right side</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-row" id="row-ticker">
+          <label class="form-label" for="ticker">Single Ticker:</label>
+          <div class="form-control">
+            <input type="text" id="ticker" placeholder="e.g., AAPL">
+          </div>
+        </div>
+
+        <div class="form-row" id="row-multiTickers">
+          <label class="form-label" for="multiTickers">Ticker List:</label>
+          <div class="form-control">
+            <textarea id="multiTickers" rows="4" placeholder="AAPL, TSLA"></textarea>
+          </div>
+        </div>
+
+        <div class="form-row" id="row-sortAlphabetically">
+          <label class="form-label" for="sortAlphabetically">Sorting:</label>
+          <div class="form-control">
+            <label class="check-row">
+              <input type="checkbox" id="sortAlphabetically">
+              <span>Sort stocks alphabetically</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="swapNameAndTicker">Swap Names:</label>
+          <div class="form-control">
+            <label class="check-row">
+              <input type="checkbox" id="swapNameAndTicker">
+              <span>Swap company name and ticker symbol</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="chartRange">Data Range:</label>
+          <div class="form-control">
+            <select id="chartRange">
+              <option value="1D">1D</option>
+              <option value="5D">5D</option>
+              <option value="1M">1M</option>
+              <option value="6M">6M</option>
+              <option value="YTD">YTD</option>
+              <option value="1Y">1Y</option>
+              <option value="5Y">5Y</option>
+              <option value="Max">Max</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="refreshInterval">Refresh Interval (minutes):</label>
+          <div class="form-control">
+            <input type="number" id="refreshInterval" min="1" max="360" step="1">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="limitHours">Active Hours:</label>
+          <div class="form-control">
+            <label class="check-row">
+              <input type="checkbox" id="limitHours">
+              <span>Only refresh data during market hours</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="skipWeekendRefresh">Weekend Refresh:</label>
+          <div class="form-control">
+            <label class="check-row">
+              <input type="checkbox" id="skipWeekendRefresh">
+              <span>Do not refresh data on weekends (Sat,Sun)</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-row" id="row-startTime">
+          <label class="form-label">Market Open:</label>
+          <div class="form-control time-row">
+            <input type="number" id="startHour" min="0" max="23" step="1" class="time-input" title="Hour">
+            <span class="time-sep">:</span>
+            <input type="number" id="startMinute" min="0" max="59" step="1" class="time-input" title="Minute">
+          </div>
+        </div>
+
+        <div class="form-row" id="row-endTime">
+          <label class="form-label">Market Close:</label>
+          <div class="form-control time-row">
+            <input type="number" id="endHour" min="0" max="23" step="1" class="time-input" title="Hour">
+            <span class="time-sep">:</span>
+            <input type="number" id="endMinute" min="0" max="59" step="1" class="time-input" title="Minute">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="hideTimestamps">Update Timestamps:</label>
+          <div class="form-control">
+            <label class="check-row">
+              <input type="checkbox" id="hideTimestamps">
+              <span>Hide update timestamps</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="formatPrices">Value Formatting:</label>
+          <div class="form-control">
+            <label class="check-row">
+              <input type="checkbox" id="formatPrices">
+              <span>Format stock price with commas (e.g. 1,000.00)</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="hideDecimals">Decimals:</label>
+          <div class="form-control">
+            <label class="check-row">
+              <input type="checkbox" id="hideDecimals">
+              <span>Remove decimals from stock price</span>
+            </label>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ SEARCH ============ -->
+    <section id="tab-search" class="tab-section" data-tab="search" role="tabpanel">
+      <h2>Search</h2>
+      <p class="help-text">Find symbols via Yahoo Finance. Use <b>SS</b> to set the single stock, or <b>MSL</b> to add to the multi-stock list.</p>
+      <div class="search-row">
+        <input type="text" id="searchField" placeholder="e.g. Tesla, AAPL..." class="search-input">
+        <button id="searchBtn" class="btn">Search</button>
+      </div>
+      <p id="searchHelpText" class="help-text">Type to find symbols and click Search.</p>
+      <ul id="searchResults" class="search-results"></ul>
+    </section>
+
+    <!-- ============ PANEL ============ -->
+    <section id="tab-panel" class="tab-section" data-tab="panel" role="tabpanel">
+      <h2>Panel</h2>
+      <div class="form-grid">
+        <div class="form-row">
+          <label class="form-label" for="hideChangePercentage">Stock Change Percentage:</label>
+          <div class="form-control">
+            <label class="check-row">
+              <input type="checkbox" id="hideChangePercentage">
+              <span>Hide stock change percentage</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PORTFOLIO ============ -->
+    <section id="tab-portfolio" class="tab-section" data-tab="portfolio" role="tabpanel">
+      <h2>Portfolio</h2>
+      <div class="form-grid">
+        <div class="form-row">
+          <label class="form-label" for="showPortfolioMode">Portfolio Mode:</label>
+          <div class="form-control">
+            <label class="check-row">
+              <input type="checkbox" id="showPortfolioMode">
+              <span>Show profit/loss calculations</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="portfolioTicker">Ticker:</label>
+          <div class="form-control">
+            <input type="text" id="portfolioTicker" placeholder="e.g., AAPL">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="portfolioShares">Shares:</label>
+          <div class="form-control">
+            <input type="number" id="portfolioShares" min="0" max="999999" step="1" value="0">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="portfolioCost">Average Cost:</label>
+          <div class="form-control">
+            <input type="number" id="portfolioCost" min="0" step="0.01" placeholder="0.00">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label">Actions:</label>
+          <div class="form-control btn-row">
+            <button id="portfolioAddBtn" class="btn">Add/Update</button>
+            <button id="portfolioRemoveBtn" class="btn">Remove</button>
+            <button id="portfolioExportBtn" class="btn">Export CSV</button>
+          </div>
+        </div>
+      </div>
+      <pre id="portfolioListText" class="portfolio-list"></pre>
+    </section>
+
+    <!-- ============ APPEARANCE ============ -->
+    <section id="tab-appearance" class="tab-section" data-tab="appearance" role="tabpanel">
+      <h2>Appearance</h2>
+      <div class="form-grid">
+        <div class="form-row">
+          <label class="form-label" for="isLightTheme">Theme:</label>
+          <div class="form-control">
+            <label class="check-row">
+              <input type="checkbox" id="isLightTheme">
+              <span>Use Light Theme</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="positiveColor">Positive Color (Hex):</label>
+          <div class="form-control color-row">
+            <input type="color" id="positiveColorPicker" value="#4cd964">
+            <input type="text" id="positiveColor" placeholder="#4cd964" class="hex-input">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="negativeColor">Negative Color (Hex):</label>
+          <div class="form-control color-row">
+            <input type="color" id="negativeColorPicker" value="#FF3B30">
+            <input type="text" id="negativeColor" placeholder="#FF3B30" class="hex-input">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="bgOpacity">Background Opacity:</label>
+          <div class="form-control slider-row">
+            <input type="range" id="bgOpacity" min="0" max="100" step="1">
+            <span id="bgOpacityLabel" class="slider-label">100%</span>
+          </div>
+        </div>
+
+        <h3 class="section-title">Ticker Symbol Text</h3>
+
+        <div class="form-row">
+          <label class="form-label" for="tickerColor">Color (Hex):</label>
+          <div class="form-control color-row">
+            <input type="color" id="tickerColorPicker" value="#FFFFFF">
+            <input type="text" id="tickerColor" placeholder="#FFFFFF" class="hex-input">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="tickerOpacity">Opacity:</label>
+          <div class="form-control slider-row">
+            <input type="range" id="tickerOpacity" min="0" max="100" step="1">
+            <span id="tickerOpacityLabel" class="slider-label">100%</span>
+          </div>
+        </div>
+
+        <h3 class="section-title">Stock Price Text</h3>
+
+        <div class="form-row">
+          <label class="form-label" for="priceColor">Color (Hex):</label>
+          <div class="form-control color-row">
+            <input type="color" id="priceColorPicker" value="#FFFFFF">
+            <input type="text" id="priceColor" placeholder="#FFFFFF" class="hex-input">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="priceOpacity">Opacity:</label>
+          <div class="form-control slider-row">
+            <input type="range" id="priceOpacity" min="0" max="100" step="1">
+            <span id="priceOpacityLabel" class="slider-label">100%</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ BACKUP ============ -->
+    <section id="tab-backup" class="tab-section" data-tab="backup" role="tabpanel">
+      <h2>Backup</h2>
+      <p class="help-text">Tüm ayarları (ticker'lar, renkler, portfolio dahil) JSON olarak yedekle/geri yükle. KDE widget'taki manuel kopyala gibi değil, tek tık dosya.</p>
+      <div class="form-grid">
+        <div class="form-row">
+          <label class="form-label">Ayarlar:</label>
+          <div class="form-control btn-row">
+            <button id="exportBtn" class="btn primary">⬇ Export JSON</button>
+            <button id="importBtn" class="btn">⬆ Import JSON</button>
+            <input type="file" id="importFile" accept=".json" style="display:none">
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Portfolio:</label>
+          <div class="form-control btn-row">
+            <button id="exportPortfolioBtn2" class="btn">⬇ Portfolio CSV</button>
+            <span class="help-text" style="margin-left:8px">Portfolio sekmesindeki CSV'nin aynısı</span>
+          </div>
+        </div>
+      </div>
+      <pre id="backupStatus" class="portfolio-list" style="display:none; margin-top:12px"></pre>
+    </section>
+  </main>
+
+  <footer class="page-footer">
+    <button id="saveBtn" class="btn primary">Save</button>
+    <span id="statusText" class="status" role="status"></span>
+  </footer>
+
+  <script src="../utils/storage.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>
