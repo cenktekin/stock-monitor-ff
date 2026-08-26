@@ -1,4 +1,26 @@
+# AMO signing
 web-ext-artifacts/
 .amo-upload-uuid
+
+# Deps
 node_modules/
+package-lock.json
+yarn.lock
+
+# Secrets / env
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# OS
 .DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~
