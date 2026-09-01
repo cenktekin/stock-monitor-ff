@@ -1,6 +1,8 @@
 /* popup.js - Single/Multi view + chart, port of QML SingleStockView/MultiStockView */
 "use strict";
 
+if (typeof browser === "undefined" && typeof chrome !== "undefined") globalThis.browser = chrome;
+
 let cfg = null;
 let data = null; // { single, list, lastUpdated, nextUpdate }
 const els = {};
@@ -185,7 +187,7 @@ function renderMulti(list) {
       e.stopPropagation();
       await setPanelTickerOverride(item.ticker);
       cfg.manualPanelTickerOverride = item.ticker;
-      browser.runtime.sendMessage({ type: "refresh" });
+      browser.runtime.sendMessage({ type: "refresh", force: true });
       renderMulti(list);
     });
 
@@ -202,14 +204,14 @@ function renderMulti(list) {
       e.preventDefault();
       await setPanelTickerOverride(item.ticker);
       cfg.manualPanelTickerOverride = item.ticker;
-      browser.runtime.sendMessage({ type: "refresh" });
+      browser.runtime.sendMessage({ type: "refresh", force: true });
       renderMulti(list);
     });
     // Middle click → refresh
     row.addEventListener("auxclick", (e) => {
       if (e.button === 1) {
         e.preventDefault();
-        browser.runtime.sendMessage({ type: "refresh" });
+        browser.runtime.sendMessage({ type: "refresh", force: true });
         row.style.opacity = "0.4";
         setTimeout(() => { row.style.opacity = "1"; }, 300);
       }
@@ -246,7 +248,7 @@ async function loadAndRender() {
 
   if (!data || (!data.single && (!data.list || data.list.length === 0))) {
     els.company.textContent = "No data yet - refreshing...";
-    browser.runtime.sendMessage({ type: "refresh" });
+    browser.runtime.sendMessage({ type: "refresh", force: true });
     renderFooter();
     return;
   }
@@ -280,7 +282,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Refresh button → background "refresh"
   document.getElementById("refreshBtn").addEventListener("click", () => {
-    browser.runtime.sendMessage({ type: "refresh" });
+    browser.runtime.sendMessage({ type: "refresh", force: true });
     els.priceBig.style.opacity = "0.3";
     setTimeout(() => { els.priceBig.style.opacity = (cfg.priceOpacity / 100); }, 300);
   });
@@ -292,7 +294,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       await setConfig({ chartRange: r });
       cfg.chartRange = r;
       document.querySelectorAll("#rangeBar [data-range]").forEach(b => b.classList.toggle("active", b === btn));
-      browser.runtime.sendMessage({ type: "refresh" });
+      browser.runtime.sendMessage({ type: "refresh", force: true });
     });
   });
 
@@ -302,7 +304,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     browser.tabs.create({ url: "https://finance.yahoo.com/quote/" + encodeURIComponent(t) });
   });
   document.getElementById("header").addEventListener("auxclick", (e) => {
-    if (e.button === 1) { e.preventDefault(); browser.runtime.sendMessage({ type: "refresh" }); }
+    if (e.button === 1) { e.preventDefault(); browser.runtime.sendMessage({ type: "refresh", force: true }); }
   });
 
   await loadAndRender();

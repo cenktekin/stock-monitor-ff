@@ -13,7 +13,7 @@ function formatNumber(amount,isChange,hideDecimals,formatPrices){
 }
 function getApiParams(r){
   switch(r){
-    case "1D": return "range=2d&interval=2m";
+    case "1D": return "range=1d&interval=2m";
     case "5D": return "range=5d&interval=15m";
     case "1M": return "range=1mo&interval=60m";
     case "6M": return "range=6mo&interval=1d";

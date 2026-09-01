@@ -59,9 +59,14 @@ function cleanChartData(meta, quotes, timestamps, chartRange) {
   return cleanData;
 }
 
-/** Port of the previousClose resolution in processSingleData / processListRow. */
 function resolvePreviousClose(meta, cleanData, chartRange) {
   if (chartRange === "1D") {
+    const pct = meta.regularMarketChangePercent;
+    if (typeof pct === "number" && isFinite(pct) && typeof meta.regularMarketPrice === "number" && isFinite(meta.regularMarketPrice)) {
+      if (pct === 0) return meta.regularMarketPrice;
+      const impliedPrev = meta.regularMarketPrice / (1 + pct / 100);
+      if (isFinite(impliedPrev) && impliedPrev > 0) return impliedPrev;
+    }
     return meta.chartPreviousClose || meta.regularMarketPreviousClose || meta.previousClose;
   }
   let prev = meta.chartPreviousClose;

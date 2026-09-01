@@ -29,6 +29,8 @@
 
 "use strict";
 
+if (typeof browser === "undefined" && typeof chrome !== "undefined") globalThis.browser = chrome;
+
 const DEFAULTS = {
   isLightTheme: false, ticker: "AAPL", isMultiMode: false, showTwoList: false,
   multiTickers: "AAPL, TSLA", sortAlphabetically: false, swapNameAndTicker: false,

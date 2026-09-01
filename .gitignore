@@ -1,4 +1,5 @@
-# AMO signing
+# Build outputs
+dist/
 web-ext-artifacts/
 .amo-upload-uuid
 

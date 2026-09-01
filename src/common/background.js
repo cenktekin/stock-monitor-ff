@@ -1,9 +1,14 @@
-/* Stock Monitor - Firefox background script
+/* Stock Monitor - cross-browser background service worker (Chrome MV3 + Firefox MV3)
  * Port of the KDE Plasma widget (stock-monitor-widget-main) to a WebExtension.
- * MV2 event page. Uses browser.* APIs (Firefox-compatible, MV3-ready).
  */
 
 "use strict";
+
+if (typeof browser === "undefined" && typeof chrome !== "undefined") globalThis.browser = chrome;
+if (typeof browser !== "undefined") {
+  if (!browser.action && browser.browserAction) browser.action = browser.browserAction;
+  if (!browser.browserAction && browser.action) browser.browserAction = browser.action;
+}
 
 // ---------------------------------------------------------------------------
 // DEFAULT_CONFIG - mirrors contents/config/main.xml defaults
@@ -89,9 +94,10 @@ function formatNumber(amount, isChange) {
 }
 
 // Port of QML getApiParams() - Yahoo Finance range/interval mapping
+// Fix: 1D now uses range=1d (was 2d) to avoid picking 2-day-old previousClose (BIST XU100.IS showed +219 instead of +66)
 function getApiParams(chartRange) {
   switch (chartRange) {
-    case "1D":  return "range=2d&interval=2m"; // 2d for reliable previous close on indices
+    case "1D":  return "range=1d&interval=2m";
     case "5D":  return "range=5d&interval=15m";
     case "1M":  return "range=1mo&interval=60m";
     case "6M":  return "range=6mo&interval=1d";
@@ -228,6 +234,14 @@ function cleanChartData(meta, quotes, timestamps, chartRange) {
 
 function resolvePreviousClose(meta, cleanData, chartRange) {
   if (chartRange === "1D") {
+    // Fix: Yahoo's chartPreviousClose is stale for BIST indices (e.g. XU100.IS showed -2.88% vs real -0.74%).
+    // regularMarketChangePercent is always correct (implied prev 14334.1). Derive prev from it when available.
+    const pct = meta.regularMarketChangePercent;
+    if (typeof pct === "number" && isFinite(pct) && typeof meta.regularMarketPrice === "number" && isFinite(meta.regularMarketPrice)) {
+      if (pct === 0) return meta.regularMarketPrice;
+      const impliedPrev = meta.regularMarketPrice / (1 + pct / 100);
+      if (isFinite(impliedPrev) && impliedPrev > 0) return impliedPrev;
+    }
     return meta.chartPreviousClose || meta.regularMarketPreviousClose || meta.previousClose;
   }
   let prev = meta.chartPreviousClose;
@@ -359,6 +373,10 @@ async function refreshData() {
 
 async function checkTimeAndRefresh() {
   if (!shouldRefreshNow()) {
+    if (!lastResults || !lastResults.single) {
+      console.log("Stock Monitor: outside window but no cached data, forcing fetch");
+      return refreshData();
+    }
     console.log("Stock Monitor: outside refresh window, skipping fetch");
     return null;
   }
@@ -372,13 +390,13 @@ function updateBadge(single) {
   try {
     // hideChangePercentage -> badge'i tamamen kapat (widget panel ayarı ile uyumlu)
     if (config.hideChangePercentage) {
-      browser.browserAction.setBadgeText({ text: "" });
-      browser.browserAction.setTitle({ title: single ? single.ticker + " " + single.price + " (" + single.pct + ")" : "Stock Monitor" });
+      browser.action.setBadgeText({ text: "" });
+      browser.action.setTitle({ title: single ? single.ticker + " " + single.price + " (" + single.pct + ")" : "Stock Monitor" });
       return;
     }
     if (!single || single.pct === undefined || single.pct === "") {
-      browser.browserAction.setBadgeText({ text: "" });
-      browser.browserAction.setTitle({ title: "Stock Monitor" });
+      browser.action.setBadgeText({ text: "" });
+      browser.action.setTitle({ title: "Stock Monitor" });
       return;
     }
     // pct = "+2.30%" veya "-12.50%" - badge 4 karakterle sınırlı
@@ -403,12 +421,12 @@ function updateBadge(single) {
       }
     }
     if (compact.length > 3) compact = compact.slice(0,3);
-    browser.browserAction.setBadgeText({ text: compact });
-    browser.browserAction.setBadgeBackgroundColor({
+    browser.action.setBadgeText({ text: compact });
+    browser.action.setBadgeBackgroundColor({
       color: isPos ? config.positiveColor : config.negativeColor
     });
     // Tooltip'te tam değer göster
-    browser.browserAction.setTitle({ title: single.ticker + " " + single.price + " (" + single.pct + ") • " + (single.name||"") });
+    browser.action.setTitle({ title: single.ticker + " " + single.price + " (" + single.pct + ") • " + (single.name||"") });
   } catch (e) {
     console.log("Badge error: " + e);
   }

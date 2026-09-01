@@ -9,6 +9,8 @@
  */
 "use strict";
 
+if (typeof browser === "undefined" && typeof chrome !== "undefined") globalThis.browser = chrome;
+
 /* Form field -> storage key mapping (id === storage key). */
 const FIELDS = [
   { id: "isMultiMode", type: "checkbox" },

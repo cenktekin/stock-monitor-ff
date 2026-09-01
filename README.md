@@ -70,25 +70,43 @@
 ## 🛠️ Geliştirme
 
 ```bash
-npm i -g web-ext
-web-ext run --source-dir .        # canlı test
-web-ext lint --source-dir .       # doğrulama (0 error)
-web-ext build --source-dir .      # zip üret
-web-ext sign --channel=unlisted   # AMO unlisted (WEB_EXT_API_KEY/SECRET gerekir)
+npm install
+npm run build              # src/common + src/{firefox,chrome} -> dist/
+npm run build:firefox      # sadece Firefox
+npm run build:chrome       # sadece Chrome
+
+npm run start:firefox      # build + web-ext run (Firefox)
+npm run lint:firefox       # web-ext lint dist/firefox
+npm run lint:chrome        # web-ext lint dist/chrome
+npm run zip:firefox        # AMO zip -> web-ext-artifacts/
+# Chrome Web Store zip:
+# dist/chrome klasorunu ziple -> stock_monitor-chrome-2.3.1.zip
 ```
 
 ## 📦 Yapı
 
 ```
 stock-monitor-ff/
-├── manifest.json
-├── background.js      # fetch, alarm, badge
-├── icons/icon.png
-├── utils/             # storage + format helpers
-├── popup/             # Single/Multi + canvas chart
-├── options/           # 6 sekme (General/Search/Panel/Portfolio/Appearance/Backup)
+├── src/
+│   ├── common/            # shared code (single source of truth)
+│   │   ├── background.js  # fetch, alarm, badge (cross-browser shim)
+│   │   ├── icons/icon.png
+│   │   ├── popup/         # Single/Multi + canvas chart
+│   │   ├── options/       # 6 sekme
+│   │   └── utils/         # storage + format + api helpers
+│   ├── firefox/
+│   │   └── manifest.json  # gecko id, strict_min_version
+│   └── chrome/
+│       └── manifest.json  # Chrome Web Store (no gecko)
+├── dist/
+│   ├── firefox/           # build output (web-ext run/lint buradan)
+│   └── chrome/            # build output
+├── scripts/build.js       # src -> dist kopyalama
+├── package.json
 └── README.md
 ```
+
+> **Legacy root files** (`manifest.json`, `background.js`, `popup/`, `options/`, `utils/`, `icons/` at repo root) are kept for backwards compat but are **deprecated**. Canonical source is `src/common/` + `src/{firefox,chrome}/manifest.json`. Always edit `src/`; `dist/` is generated.
 
 ## 📄 Lisans
 

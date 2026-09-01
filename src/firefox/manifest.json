@@ -1,0 +1,46 @@
+{
+  "manifest_version": 3,
+  "name": "Stock Monitor",
+  "version": "2.3.1",
+  "description": "Yahoo Finance tabanlı hisse/crypto/döviz takip - KDE widget portu",
+  "permissions": [
+    "storage",
+    "alarms",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://query1.finance.yahoo.com/*",
+    "https://query2.finance.yahoo.com/*"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Stock Monitor",
+    "default_icon": {
+      "48": "icons/icon.png",
+      "96": "icons/icon.png",
+      "128": "icons/icon.png"
+    }
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "icons": {
+    "48": "icons/icon.png",
+    "96": "icons/icon.png",
+    "128": "icons/icon.png",
+    "512": "icons/icon.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "stock-monitor-ff@cenk",
+      "strict_min_version": "142.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  }
+}
