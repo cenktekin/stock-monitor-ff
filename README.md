@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://addons.mozilla.org/en-US/firefox/"><img alt="Firefox" src="https://img.shields.io/badge/Firefox-Add--on-orange?style=flat-square&logo=firefox"></a>
-  <img alt="Version" src="https://img.shields.io/badge/version-2.2-blue?style=flat-square">
+  <img alt="Version" src="https://img.shields.io/badge/version-2.3.1-blue?style=flat-square">
   <img alt="License" src="https://img.shields.io/badge/license-GPL--3.0-green?style=flat-square">
 </p>
 
@@ -39,12 +39,13 @@
 ## 🚀 Kurulum
 
 ### Geçici (test)
-1. `about:debugging` → This Firefox → Load Temporary Add-on
-2. `manifest.json` seç
+1. `npm run build:firefox` (dist/firefox klasörünü üretir)
+2. `about:debugging` → This Firefox → Load Temporary Add-on
+3. `dist/firefox/manifest.json` seç
 
 ### Kalıcı
-- `web-ext-artifacts/stock_monitor-2.2.zip` → `about:addons` → Install from file
-- yakında AMO (unlisted) üzerinden de indirilebilir olacak
+- `npm run zip:firefox` → `web-ext-artifacts/stock_monitor-2.3.1.zip` → `about:addons` → Install from file
+- AMO listed yayını sonrasında addons.mozilla.org üzerinden tek tıkla kurulabilecek
 
 ## ⚙️ Ayarlar
 
@@ -105,8 +106,6 @@ stock-monitor-ff/
 ├── package.json
 └── README.md
 ```
-
-> **Legacy root files** (`manifest.json`, `background.js`, `popup/`, `options/`, `utils/`, `icons/` at repo root) are kept for backwards compat but are **deprecated**. Canonical source is `src/common/` + `src/{firefox,chrome}/manifest.json`. Always edit `src/`; `dist/` is generated.
 
 ## 📄 Lisans
 
