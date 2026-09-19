@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://addons.mozilla.org/en-US/firefox/"><img alt="Firefox" src="https://img.shields.io/badge/Firefox-Add--on-orange?style=flat-square&logo=firefox"></a>
-  <img alt="Version" src="https://img.shields.io/badge/version-2.3.1-blue?style=flat-square">
+  <img alt="Version" src="https://img.shields.io/badge/version-2.3.2-blue?style=flat-square">
   <img alt="License" src="https://img.shields.io/badge/license-GPL--3.0-green?style=flat-square">
 </p>
 
@@ -44,7 +44,7 @@
 3. `dist/firefox/manifest.json` seç
 
 ### Kalıcı
-- `npm run zip:firefox` → `web-ext-artifacts/stock_monitor-2.3.1.zip` → `about:addons` → Install from file
+- `npm run zip:firefox` → `web-ext-artifacts/stock_monitor-2.3.2.zip` → `about:addons` → Install from file
 - AMO listed yayını sonrasında addons.mozilla.org üzerinden tek tıkla kurulabilecek
 
 ## ⚙️ Ayarlar
@@ -81,7 +81,7 @@ npm run lint:firefox       # web-ext lint dist/firefox
 npm run lint:chrome        # web-ext lint dist/chrome
 npm run zip:firefox        # AMO zip -> web-ext-artifacts/
 # Chrome Web Store zip:
-# dist/chrome klasorunu ziple -> stock_monitor-chrome-2.3.1.zip
+# dist/chrome klasorunu ziple -> stock_monitor-chrome-2.3.2.zip
 ```
 
 ## 📦 Yapı

@@ -59,15 +59,41 @@ function cleanChartData(meta, quotes, timestamps, chartRange) {
   return cleanData;
 }
 
-function resolvePreviousClose(meta, cleanData, chartRange) {
+function getSessionOpen(meta, opens, timestamps, chartRange) {
+  if (!opens || !timestamps || opens.length === 0) return null;
+  const startTime = (meta.currentTradingPeriod && meta.currentTradingPeriod.regular)
+    ? meta.currentTradingPeriod.regular.start : 0;
+  for (let i = 0; i < opens.length && i < timestamps.length; i++) {
+    if (opens[i] !== null && opens[i] !== undefined && opens[i] > 0) {
+      if (chartRange === "1D" && startTime > 0 && timestamps[i] < startTime) continue;
+      return opens[i];
+    }
+  }
+  return null;
+}
+
+function resolvePreviousClose(meta, cleanData, chartRange, sessionOpen) {
   if (chartRange === "1D") {
     const pct = meta.regularMarketChangePercent;
+    let candidate = null;
     if (typeof pct === "number" && isFinite(pct) && typeof meta.regularMarketPrice === "number" && isFinite(meta.regularMarketPrice)) {
-      if (pct === 0) return meta.regularMarketPrice;
-      const impliedPrev = meta.regularMarketPrice / (1 + pct / 100);
-      if (isFinite(impliedPrev) && impliedPrev > 0) return impliedPrev;
+      if (pct === 0) {
+        candidate = meta.regularMarketPrice;
+      } else {
+        const impliedPrev = meta.regularMarketPrice / (1 + pct / 100);
+        if (isFinite(impliedPrev) && impliedPrev > 0) candidate = impliedPrev;
+      }
     }
-    return meta.chartPreviousClose || meta.regularMarketPreviousClose || meta.previousClose;
+    if (candidate === null || !isFinite(candidate) || candidate <= 0) {
+      candidate = meta.chartPreviousClose || meta.regularMarketPreviousClose || meta.previousClose || null;
+    }
+    const openValid = typeof sessionOpen === "number" && isFinite(sessionOpen) && sessionOpen > 0;
+    if (typeof candidate === "number" && isFinite(candidate) && candidate > 0 && openValid) {
+      if (Math.abs(candidate - sessionOpen) / sessionOpen > 0.015) return sessionOpen;
+      return candidate;
+    }
+    if (openValid) return sessionOpen;
+    return candidate;
   }
   let prev = meta.chartPreviousClose;
   if (!prev || prev === 0) {
@@ -89,7 +115,8 @@ function processSingleData(json, config, fallbackSymbol) {
   const currentPrice = currencySym + formatNumber(meta.regularMarketPrice, false, config.hideDecimals, config.formatPrices);
 
   const cleanData = cleanChartData(meta, quotes, timestamps, config.chartRange);
-  const previousClose = resolvePreviousClose(meta, cleanData, config.chartRange);
+  const sessionOpen = getSessionOpen(meta, result.indicators.quote[0].open, timestamps, config.chartRange);
+  const previousClose = resolvePreviousClose(meta, cleanData, config.chartRange, sessionOpen);
 
   const change = meta.regularMarketPrice - previousClose;
   const isPositive = change >= 0;
@@ -123,7 +150,8 @@ function processListRow(symbol, json, config) {
   const curSym = getCurrencySymbol(meta.currency);
 
   const cleanData = cleanChartData(meta, quotes, timestamps, config.chartRange);
-  const prev = resolvePreviousClose(meta, cleanData, config.chartRange);
+  const sessionOpen = getSessionOpen(meta, result.indicators.quote[0].open, timestamps, config.chartRange);
+  const prev = resolvePreviousClose(meta, cleanData, config.chartRange, sessionOpen);
 
   const change = current - prev;
   const pct = prev > 0 ? (change / prev) * 100 : 0;

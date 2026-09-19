@@ -46,6 +46,7 @@ const DEFAULT_CONFIG = {
 
 const CONFIG_KEY = "config";
 const DATA_KEY = "data";
+const SESSION_KEY = "marketSession";
 
 // ---------------------------------------------------------------------------
 // State
@@ -54,6 +55,7 @@ let config = Object.assign({}, DEFAULT_CONFIG);
 let lastResults = null; // { single: {...}, list: [...] } or null
 let lastUpdated = "";
 let nextUpdate = "";
+let marketSession = null; // { startMin, endMin, tzOffset } - exchange-local trading window
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -123,6 +125,41 @@ function updateTimestamps() {
 }
 
 // ---------------------------------------------------------------------------
+// Market session - auto "is the instrument's market open?" from Yahoo's
+// currentTradingPeriod. Stored as exchange-local minutes-of-day (not absolute
+// timestamps) so the gate can never go stale across days.
+// ---------------------------------------------------------------------------
+function captureMarketSession(meta) {
+  try {
+    const period = meta && meta.currentTradingPeriod && meta.currentTradingPeriod.regular;
+    if (!period || !period.start || !period.end) return;
+    const off = typeof meta.gmtoffset === "number" ? meta.gmtoffset : 0;
+    marketSession = {
+      startMin: Math.floor(((period.start + off) % 86400) / 60),
+      endMin: Math.floor(((period.end + off) % 86400) / 60),
+      tzOffset: off
+    };
+  } catch (e) {
+    console.log("Session capture error: " + e);
+  }
+}
+
+function isMarketOpen() {
+  if (!marketSession ||
+      typeof marketSession.startMin !== "number" ||
+      typeof marketSession.endMin !== "number") {
+    return true; // unknown yet - never block (bootstrap fetch fills it in)
+  }
+  const local = new Date(Date.now() + (marketSession.tzOffset || 0) * 1000);
+  const nowMin = local.getUTCHours() * 60 + local.getUTCMinutes();
+  const start = marketSession.startMin;
+  const end = marketSession.endMin;
+  if (start === end) return true; // 24h (crypto/FX)
+  if (start < end) return nowMin >= start && nowMin < end;
+  return nowMin >= start || nowMin < end; // wraps midnight
+}
+
+// ---------------------------------------------------------------------------
 // Time gating - port of QML checkTimeAndRefresh()
 // ---------------------------------------------------------------------------
 function shouldRefreshNow() {
@@ -134,7 +171,12 @@ function shouldRefreshNow() {
     return false;
   }
 
-  // 2. Time window check
+  // 2. Exchange session check - don't poll while the instrument's market is closed
+  if (!isMarketOpen()) {
+    return false;
+  }
+
+  // 3. Time window check
   if (config.limitHours) {
     const nowHour = d.getHours();
     const nowMin = d.getMinutes();
@@ -232,17 +274,50 @@ function cleanChartData(meta, quotes, timestamps, chartRange) {
   return cleanData;
 }
 
-function resolvePreviousClose(meta, cleanData, chartRange) {
-  if (chartRange === "1D") {
-    // Fix: Yahoo's chartPreviousClose is stale for BIST indices (e.g. XU100.IS showed -2.88% vs real -0.74%).
-    // regularMarketChangePercent is always correct (implied prev 14334.1). Derive prev from it when available.
-    const pct = meta.regularMarketChangePercent;
-    if (typeof pct === "number" && isFinite(pct) && typeof meta.regularMarketPrice === "number" && isFinite(meta.regularMarketPrice)) {
-      if (pct === 0) return meta.regularMarketPrice;
-      const impliedPrev = meta.regularMarketPrice / (1 + pct / 100);
-      if (isFinite(impliedPrev) && impliedPrev > 0) return impliedPrev;
+function getSessionOpen(meta, opens, timestamps, chartRange) {
+  if (!opens || !timestamps || opens.length === 0) return null;
+  const startTime = (meta.currentTradingPeriod && meta.currentTradingPeriod.regular)
+    ? meta.currentTradingPeriod.regular.start : 0;
+  for (let i = 0; i < opens.length && i < timestamps.length; i++) {
+    if (opens[i] !== null && opens[i] !== undefined && opens[i] > 0) {
+      if (chartRange === "1D" && startTime > 0 && timestamps[i] < startTime) continue;
+      return opens[i];
     }
-    return meta.chartPreviousClose || meta.regularMarketPreviousClose || meta.previousClose;
+  }
+  return null;
+}
+
+function resolvePreviousClose(meta, cleanData, chartRange, sessionOpen) {
+  if (chartRange === "1D") {
+    // Yahoo's intraday fields can go stale for BIST indices (e.g. XU100.IS on
+    // 2026-09-18 showed chartPreviousClose 13122.6 / +1.23% when the true prior
+    // close was 13509.8 / -1.67%). Prefer the pct-implied prev, but cross-check
+    // it against the session open: a >1.5% gap means the intraday fields are
+    // stale, so fall back to the session open (best same-day prior-close proxy).
+    const pct = meta.regularMarketChangePercent;
+    let candidate = null;
+    if (typeof pct === "number" && isFinite(pct) && typeof meta.regularMarketPrice === "number" && isFinite(meta.regularMarketPrice)) {
+      if (pct === 0) {
+        candidate = meta.regularMarketPrice;
+      } else {
+        const impliedPrev = meta.regularMarketPrice / (1 + pct / 100);
+        if (isFinite(impliedPrev) && impliedPrev > 0) candidate = impliedPrev;
+      }
+    }
+    if (candidate === null || !isFinite(candidate) || candidate <= 0) {
+      candidate = meta.chartPreviousClose || meta.regularMarketPreviousClose || meta.previousClose || null;
+    }
+    const openValid = typeof sessionOpen === "number" && isFinite(sessionOpen) && sessionOpen > 0;
+    if (typeof candidate === "number" && isFinite(candidate) && candidate > 0 && openValid) {
+      if (Math.abs(candidate - sessionOpen) / sessionOpen > 0.015) {
+        console.log("Stock Monitor: stale 1D prevClose detected (" + candidate.toFixed(2) +
+          " vs session open " + sessionOpen.toFixed(2) + "), using session open");
+        return sessionOpen;
+      }
+      return candidate;
+    }
+    if (openValid) return sessionOpen;
+    return candidate;
   }
   let prev = meta.chartPreviousClose;
   if (!prev || prev === 0) {
@@ -257,6 +332,7 @@ function processSingleData(json, fallbackSymbol) {
     const meta = result.meta;
     const quotes = result.indicators.quote[0].close;
     const timestamps = result.timestamp;
+    captureMarketSession(meta);
 
     const companyName = meta.shortName || meta.longName || (fallbackSymbol || config.ticker);
     const currencySym = getCurrencySymbol(meta.currency);
@@ -264,7 +340,8 @@ function processSingleData(json, fallbackSymbol) {
     const currentPrice = currencySym + formatNumber(meta.regularMarketPrice, false);
 
     const cleanData = cleanChartData(meta, quotes, timestamps, config.chartRange);
-    const previousClose = resolvePreviousClose(meta, cleanData, config.chartRange);
+    const sessionOpen = getSessionOpen(meta, result.indicators.quote[0].open, timestamps, config.chartRange);
+    const previousClose = resolvePreviousClose(meta, cleanData, config.chartRange, sessionOpen);
 
     const change = meta.regularMarketPrice - previousClose;
     const isPositive = change >= 0;
@@ -300,12 +377,14 @@ function processListRow(symbol, json) {
     const meta = result.meta;
     const quotes = result.indicators.quote[0].close;
     const timestamps = result.timestamp;
+    captureMarketSession(meta);
 
     const current = meta.regularMarketPrice;
     const curSym = getCurrencySymbol(meta.currency);
 
     const cleanData = cleanChartData(meta, quotes, timestamps, config.chartRange);
-    const prev = resolvePreviousClose(meta, cleanData, config.chartRange);
+    const sessionOpen = getSessionOpen(meta, result.indicators.quote[0].open, timestamps, config.chartRange);
+    const prev = resolvePreviousClose(meta, cleanData, config.chartRange, sessionOpen);
 
     const change = current - prev;
     const pct = prev > 0 ? (change / prev) * 100 : 0;
@@ -442,7 +521,7 @@ async function persistData() {
     lastUpdated: lastUpdated,
     nextUpdate: nextUpdate
   };
-  await browser.storage.local.set({ [DATA_KEY]: payload });
+  await browser.storage.local.set({ [DATA_KEY]: payload, [SESSION_KEY]: marketSession });
 }
 
 async function loadConfig() {
@@ -450,6 +529,11 @@ async function loadConfig() {
   if (stored && stored[CONFIG_KEY]) {
     config = Object.assign({}, DEFAULT_CONFIG, stored[CONFIG_KEY]);
   }
+}
+
+async function loadSession() {
+  const stored = await browser.storage.local.get(SESSION_KEY);
+  if (stored && stored[SESSION_KEY]) marketSession = stored[SESSION_KEY];
 }
 
 async function saveConfig(newConfig) {
@@ -466,6 +550,14 @@ async function setupAlarm() {
   await browser.alarms.clear("refresh");
   browser.alarms.create("refresh", { periodInMinutes: Math.max(1, config.refreshInterval) });
 }
+
+browser.alarms.onAlarm.addListener(function (alarm) {
+  if (alarm && alarm.name === "refresh") {
+    checkTimeAndRefresh().catch(function (e) {
+      console.log("Alarm refresh error: " + e);
+    });
+  }
+});
 
 // ---------------------------------------------------------------------------
 // Search - query2.finance.yahoo.com/v1/finance/search
@@ -546,6 +638,7 @@ browser.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 browser.runtime.onInstalled.addListener(async function (details) {
   console.log("Stock Monitor installed: " + (details.reason || "install"));
   await loadConfig();
+  await loadSession();
   await browser.storage.local.set({ [CONFIG_KEY]: config });
   await setupAlarm();
   await checkTimeAndRefresh();
@@ -553,6 +646,7 @@ browser.runtime.onInstalled.addListener(async function (details) {
 
 browser.runtime.onStartup.addListener(async function () {
   await loadConfig();
+  await loadSession();
   await setupAlarm();
   await checkTimeAndRefresh();
 });
@@ -561,6 +655,7 @@ browser.runtime.onStartup.addListener(async function () {
 (async function init() {
   try {
     await loadConfig();
+    await loadSession();
     await setupAlarm();
     await checkTimeAndRefresh();
   } catch (e) {

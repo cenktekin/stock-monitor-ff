@@ -74,6 +74,7 @@ body.light {
 }
 .badge.pos { color: var(--pos); background: color-mix(in srgb, var(--pos) 15%, transparent); border-color: var(--pos); }
 .badge.neg { color: var(--neg); background: color-mix(in srgb, var(--neg) 15%, transparent); border-color: var(--neg); }
+.badge.neutral { color: var(--muted); background: transparent; border-color: transparent; }
 
 /* ── Single view ────────────────────────────────────── */
 .single-view { display: block; }

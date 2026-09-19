@@ -4,6 +4,11 @@ Tüm önemli değişiklikler bu dosyada tutulur. Format: [Keep a Changelog](http
 
 ## [Unreleased]
 
+## [2.3.2] - 2026-09-19
+
+### Fixed
+- BIST 1D'de bayat intraday baz (XU100.IS 18.09.2026'da +%1,23 yerine gerçek -%1,67): prevClose artık seans açılışıyla çapraz kontrol ediliyor, >%1,5 sapmada açılış baz alınıyor (`getSessionOpen` + `resolvePreviousClose` cross-check, `background.js` + `utils/api.js`)
+
 ### Docs
 - README: public/AMO yayınına hazırlık — kurulum adımları `dist/firefox` üzerinden güncellendi, sürüm rozeti ve zip referansları 2.3.1'e çekildi, geçersiz legacy-root notu kaldırıldı
 - CHANGELOG dosyası eklendi

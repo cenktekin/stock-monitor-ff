@@ -247,6 +247,10 @@ async function loadAndRender() {
   }
 
   if (!data || (!data.single && (!data.list || data.list.length === 0))) {
+    const fallbackTicker = cfg.isMultiMode
+      ? (String(cfg.multiTickers || "").split(",").map(s => s.trim()).filter(Boolean)[0] || "\u2014")
+      : (cfg.ticker || "\u2014");
+    els.ticker.textContent = fallbackTicker.toUpperCase();
     els.company.textContent = "No data yet - refreshing...";
     browser.runtime.sendMessage({ type: "refresh", force: true });
     renderFooter();
