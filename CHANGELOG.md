@@ -4,6 +4,15 @@ Tüm önemli değişiklikler bu dosyada tutulur. Format: [Keep a Changelog](http
 
 ## [Unreleased]
 
+## [2.3.6] - 2026-10-02
+
+### Fixed
+- İkon boyutları: manifest 48/96/128 px ilan ediyordu ama `icons/icon.png` 512 px'di; gerçek 48/96/128 px ikonlar üretilip manifest'ler bunlara bağlandı (web-ext lint ikon uyarıları giderildi)
+- Ayarlar > Search sonuç satırları `innerHTML` yerine `textContent` ile kuruluyor (güvenli olmayan atama uyarısı kaldırıldı, kullanılmayan `escapeHtml()` silindi)
+
+### Changed
+- `web-ext lint dist/firefox`: 0 hata / 0 uyarı / 0 bildirim
+
 ## [2.3.5] - 2026-09-26
 
 ### Fixed
