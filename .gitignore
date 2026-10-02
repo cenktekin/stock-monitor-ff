@@ -1,7 +1,7 @@
 # Build outputs
 dist/
 web-ext-artifacts/
-.amo-upload-uuid
+.amo-upload-uuid*
 
 # Deps
 node_modules/

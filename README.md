@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://addons.mozilla.org/en-US/firefox/"><img alt="Firefox" src="https://img.shields.io/badge/Firefox-Add--on-orange?style=flat-square&logo=firefox"></a>
-  <img alt="Version" src="https://img.shields.io/badge/version-2.3.2-blue?style=flat-square">
+  <img alt="Version" src="https://img.shields.io/badge/version-2.3.5-blue?style=flat-square">
   <img alt="License" src="https://img.shields.io/badge/license-GPL--3.0-green?style=flat-square">
 </p>
 
@@ -29,12 +29,25 @@
 
 ## 📸 Ekran Görüntüleri
 
-> *Yakında eklenecek — popup, options ve badge örnekleri*
+**Popup — Single görünüm** (XU100.IS · 1D / 1M aralık, gradient chart + prevClose çizgisi)
 
-`screenshots/` klasörüne ekle:
-- `popup.png` — single/multi view
-- `options.png` — ayarlar sekmeleri
-- `badge.png` — toolbar rozeti
+<p align="center">
+  <img src="Screenshots/Stock_Monitor_BIST1001D.jpeg" width="360" alt="Popup — XU100.IS 1D (yeşil)">
+  <img src="Screenshots/Stock_Monitor_BIST1001MO.jpeg" width="360" alt="Popup — XU100.IS 1M (kırmızı)">
+</p>
+
+**Ayarlar — 6 sekme** (General · Search · Panel · Portfolio · Appearance · Backup)
+
+<p align="center">
+  <img src="Screenshots/Stock_Monitor_General.jpeg" width="300" alt="Ayarlar — General">
+  <img src="Screenshots/Stock_Monitor_Search.jpeg" width="300" alt="Ayarlar — Search">
+  <img src="Screenshots/Stock_Monitor_Panel.jpeg" width="300" alt="Ayarlar — Panel">
+</p>
+<p align="center">
+  <img src="Screenshots/Stock_Monitor_Portfolio.jpeg" width="300" alt="Ayarlar — Portfolio">
+  <img src="Screenshots/Stock_Monitor_Appereance.jpeg" width="300" alt="Ayarlar — Appearance">
+  <img src="Screenshots/Stock_Monitor_Backup.jpeg" width="300" alt="Ayarlar — Backup">
+</p>
 
 ## 🚀 Kurulum
 
@@ -44,7 +57,7 @@
 3. `dist/firefox/manifest.json` seç
 
 ### Kalıcı
-- `npm run zip:firefox` → `web-ext-artifacts/stock_monitor-2.3.2.zip` → `about:addons` → Install from file
+- `npm run zip:firefox` → `web-ext-artifacts/stock_monitor-2.3.5.zip` → `about:addons` → Install from file
 - AMO listed yayını sonrasında addons.mozilla.org üzerinden tek tıkla kurulabilecek
 
 ## ⚙️ Ayarlar
@@ -81,7 +94,7 @@ npm run lint:firefox       # web-ext lint dist/firefox
 npm run lint:chrome        # web-ext lint dist/chrome
 npm run zip:firefox        # AMO zip -> web-ext-artifacts/
 # Chrome Web Store zip:
-# dist/chrome klasorunu ziple -> stock_monitor-chrome-2.3.2.zip
+# dist/chrome klasorunu ziple -> stock_monitor-chrome-2.3.5.zip
 ```
 
 ## 📦 Yapı
