@@ -284,6 +284,21 @@ function getSessionOpen(meta, opens, timestamps, chartRange) {
       return opens[i];
     }
   }
+  // Weekend/pre-market fallback: timestamps belong to an older session than
+  // currentTradingPeriod (e.g. Friday data while the period already points to
+  // Monday). Take the first open of the last trading day (after the last >4h gap).
+  if (chartRange === "1D" && timestamps.length > 0) {
+    let dayStartIndex = 0;
+    for (let j = timestamps.length - 1; j > 0; j--) {
+      if (timestamps[j] - timestamps[j - 1] > 4 * 3600) {
+        dayStartIndex = j;
+        break;
+      }
+    }
+    for (let k = dayStartIndex; k < opens.length && k < timestamps.length; k++) {
+      if (opens[k] !== null && opens[k] !== undefined && opens[k] > 0) return opens[k];
+    }
+  }
   return null;
 }
 
@@ -429,6 +444,7 @@ function parseTickers(list) {
 }
 
 async function refreshData() {
+  await ensureLoaded();
   const range = config.chartRange;
   let single = null;
   let list = [];
@@ -450,10 +466,41 @@ async function refreshData() {
   return lastResults;
 }
 
+// Restore the last persisted snapshot into memory (and re-apply the badge)
+// without touching the network. Used when the refresh gate is closed so a
+// worker wake can never leave the toolbar showing a stale/default symbol.
+async function hydrateFromStorage() {
+  const stored = await browser.storage.local.get(DATA_KEY);
+  const payload = stored && stored[DATA_KEY];
+  if (!payload || !payload.single) return false;
+  // Refuse a snapshot for a symbol we no longer track: builds before 2.3.4
+  // could persist the DEFAULT ticker, and with a closed market gate that wrong
+  // snapshot would otherwise be served forever. Returning false makes the
+  // caller do one repair fetch with the tracked symbol.
+  const tracked = config.isMultiMode
+    ? (parseTickers(config.multiTickers)[0] || config.ticker)
+    : config.ticker;
+  if (payload.single.ticker && tracked && payload.single.ticker !== tracked) {
+    console.log("Stock Monitor: cached snapshot is " + payload.single.ticker +
+      " but tracking " + tracked + " - repairing");
+    return false;
+  }
+  lastResults = { single: payload.single, list: payload.list || [] };
+  if (payload.lastUpdated) lastUpdated = payload.lastUpdated;
+  if (payload.nextUpdate) nextUpdate = payload.nextUpdate;
+  updateBadge(payload.single);
+  return true;
+}
+
 async function checkTimeAndRefresh() {
+  await ensureLoaded();
   if (!shouldRefreshNow()) {
     if (!lastResults || !lastResults.single) {
-      console.log("Stock Monitor: outside window but no cached data, forcing fetch");
+      if (await hydrateFromStorage()) {
+        console.log("Stock Monitor: outside refresh window, restored cached data");
+        return lastResults;
+      }
+      console.log("Stock Monitor: outside window and no cached data, fetching once");
       return refreshData();
     }
     console.log("Stock Monitor: outside refresh window, skipping fetch");
@@ -536,7 +583,23 @@ async function loadSession() {
   if (stored && stored[SESSION_KEY]) marketSession = stored[SESSION_KEY];
 }
 
+// `config` starts as DEFAULT_CONFIG on every MV3 worker wake, so any handler
+// that fires before the async load resolves would fetch the default ticker
+// (AAPL) and overwrite both storage and the toolbar badge. Every entry point
+// awaits this promise before reading `config`.
+let loadedPromise = null;
+function ensureLoaded() {
+  if (!loadedPromise) {
+    loadedPromise = (async function () {
+      await loadConfig();
+      await loadSession();
+    })();
+  }
+  return loadedPromise;
+}
+
 async function saveConfig(newConfig) {
+  await ensureLoaded();
   config = Object.assign({}, DEFAULT_CONFIG, newConfig);
   await browser.storage.local.set({ [CONFIG_KEY]: config });
   await setupAlarm();
@@ -547,6 +610,7 @@ async function saveConfig(newConfig) {
 // Alarms
 // ---------------------------------------------------------------------------
 async function setupAlarm() {
+  await ensureLoaded();
   await browser.alarms.clear("refresh");
   browser.alarms.create("refresh", { periodInMinutes: Math.max(1, config.refreshInterval) });
 }
@@ -596,6 +660,7 @@ browser.storage.onChanged.addListener(async (changes, area)=>{
 
 browser.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   const handle = async function () {
+    await ensureLoaded();
     const msgType = (message && (message.type || message.action)) || "";
   switch (msgType) {
       case "refresh":
@@ -637,16 +702,14 @@ browser.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 // ---------------------------------------------------------------------------
 browser.runtime.onInstalled.addListener(async function (details) {
   console.log("Stock Monitor installed: " + (details.reason || "install"));
-  await loadConfig();
-  await loadSession();
+  await ensureLoaded();
   await browser.storage.local.set({ [CONFIG_KEY]: config });
   await setupAlarm();
   await checkTimeAndRefresh();
 });
 
 browser.runtime.onStartup.addListener(async function () {
-  await loadConfig();
-  await loadSession();
+  await ensureLoaded();
   await setupAlarm();
   await checkTimeAndRefresh();
 });
@@ -654,8 +717,7 @@ browser.runtime.onStartup.addListener(async function () {
 // Initial load (event page wake)
 (async function init() {
   try {
-    await loadConfig();
-    await loadSession();
+    await ensureLoaded();
     await setupAlarm();
     await checkTimeAndRefresh();
   } catch (e) {

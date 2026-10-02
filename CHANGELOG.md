@@ -4,6 +4,25 @@ Tüm önemli değişiklikler bu dosyada tutulur. Format: [Keep a Changelog](http
 
 ## [Unreleased]
 
+## [2.3.5] - 2026-09-26
+
+### Fixed
+- Bozuk (default ticker'lı) snapshot kilitlenmesi: 2.3.4 öncesi build'ler hafta sonu storage'a **AAPL** yazabildiği için, gate kapalıyken cache hydrate edilince rozet kalıcı olarak AAPL'de kilitli kalabiliyordu. `hydrateFromStorage()` artık snapshot'ın sembolünü takip edilen sembolle karşılaştırıyor; uyuşmazsa snapshot reddedilip **tek seferlik onarım fetch'i** yapılıyor (`background.js`)
+
+## [2.3.4] - 2026-09-26
+
+### Fixed
+- Varsayılan ticker sızıntısı: MV3 worker her uyanışta `config`'i DEFAULT_CONFIG (AAPL) ile başlatıyordu; `loadConfig()` çözülmeden tetiklenen alarm/mesaj handler'ı **varsayılan** sembolü çekip storage'ı ve toolbar rozetini eziyordu (hafta sonu rozet AAPL'de kilitli kalıyordu). Tüm giriş noktaları artık `ensureLoaded()` bekliyor (`background.js`)
+- Hafta sonu/piyasa kapalı gate'i deliniyordu: `checkTimeAndRefresh()` "cache yok" diye network'e çıkıyordu; artık storage'daki son snapshot memory'ye hydrate edilip rozet yeniden uygulanıyor (boşuna fetch yok, rozet doğru sembole dönüyor)
+
+### Changed
+- Firefox (AMO unlisted) ve Chrome hedefleri aynı sürümde: 2.3.4
+
+## [2.3.3] - 2026-09-21
+
+### Fixed
+- Hafta sonu/piyasa kapalı durumda cross-check susuyordu: `getSessionOpen` seans dönemi mumlardan yeniyse (Cuma verisi + Pazartesi seansı) son işlem gününün açılışına düşüyor, XU100.IS weekend'de +%1,23 yerine -%1,67 gösteriyor
+
 ## [2.3.2] - 2026-09-19
 
 ### Fixed

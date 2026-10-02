@@ -1,6 +1,6 @@
 {
   "name": "stock-monitor",
-  "version": "2.3.2",
+  "version": "2.3.5",
   "private": true,
   "description": "Yahoo Finance stock/crypto/FX tracker - KDE widget port (Firefox + Chrome)",
   "scripts": {
@@ -13,7 +13,7 @@
     "start:firefox": "npm run build:firefox && web-ext run --source-dir dist/firefox",
     "start:chrome": "npm run build:chrome && web-ext run --source-dir dist/chrome --target=chromium",
     "zip:firefox": "web-ext build --source-dir dist/firefox --artifacts-dir web-ext-artifacts",
-    "zip:chrome": "node -e \"const{execSync}=require('child_process');execSync('powershell Compress-Archive -Force -Path dist/chrome/* -DestinationPath web-ext-artifacts/stock_monitor-chrome-2.3.2.zip',{stdio:'inherit'})\""
+    "zip:chrome": "node -e \"const{execSync}=require('child_process');execSync('powershell Compress-Archive -Force -Path dist/chrome/* -DestinationPath web-ext-artifacts/stock_monitor-chrome-2.3.5.zip',{stdio:'inherit'})\""
   },
   "devDependencies": {
     "web-ext": "^8.4.0"

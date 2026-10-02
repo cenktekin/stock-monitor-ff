@@ -69,6 +69,21 @@ function getSessionOpen(meta, opens, timestamps, chartRange) {
       return opens[i];
     }
   }
+  // Weekend/pre-market fallback: timestamps belong to an older session than
+  // currentTradingPeriod (e.g. Friday data while the period already points to
+  // Monday). Take the first open of the last trading day (after the last >4h gap).
+  if (chartRange === "1D" && timestamps.length > 0) {
+    let dayStartIndex = 0;
+    for (let j = timestamps.length - 1; j > 0; j--) {
+      if (timestamps[j] - timestamps[j - 1] > 4 * 3600) {
+        dayStartIndex = j;
+        break;
+      }
+    }
+    for (let k = dayStartIndex; k < opens.length && k < timestamps.length; k++) {
+      if (opens[k] !== null && opens[k] !== undefined && opens[k] > 0) return opens[k];
+    }
+  }
   return null;
 }
 
