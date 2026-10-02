@@ -73,12 +73,6 @@ function normalizeHex(value) {
   return "#000000";
 }
 
-function escapeHtml(str) {
-  return String(str).replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-  }[c]));
-}
-
 function showStatus(msg) {
   const el = document.getElementById("statusText");
   el.textContent = msg;
@@ -246,7 +240,10 @@ function createResultRow(symbol, name) {
 
   const label = document.createElement("span");
   label.className = "result-label";
-  label.innerHTML = "<b>" + escapeHtml(symbol) + "</b> - " + escapeHtml(name);
+  const symbolEl = document.createElement("b");
+  symbolEl.textContent = symbol;
+  label.appendChild(symbolEl);
+  label.appendChild(document.createTextNode(" - " + name));
 
   const actions = document.createElement("span");
   actions.className = "result-actions";
