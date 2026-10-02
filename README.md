@@ -45,7 +45,7 @@
 </p>
 <p align="center">
   <img src="Screenshots/Stock_Monitor_Portfolio.jpeg" width="300" alt="Ayarlar — Portfolio">
-  <img src="Screenshots/Stock_Monitor_Appereance.jpeg" width="300" alt="Ayarlar — Appearance">
+  <img src="Screenshots/Stock_Monitor_Appearance.jpeg" width="300" alt="Ayarlar — Appearance">
   <img src="Screenshots/Stock_Monitor_Backup.jpeg" width="300" alt="Ayarlar — Backup">
 </p>
 
