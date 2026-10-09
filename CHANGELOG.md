@@ -4,6 +4,14 @@ Tüm önemli değişiklikler bu dosyada tutulur. Format: [Keep a Changelog](http
 
 ## [Unreleased]
 
+### Docs
+- README iki dilli yapıldı: `README.md` (English) + `README.tr.md` (Türkçe), üstte dil geçişi
+
+## [2.3.7] - 2026-10-05
+
+### Changed
+- AMO listed kanala geçiş için sürüm 2.3.7: aynı sürüm numarası iki kanalda bulunamadığından (addons-server `Version` unique = addon+version) unlisted 2.3.6 yerine yeni sürüm olarak yayınlanıyor (işlevsel değişiklik yok)
+
 ## [2.3.6] - 2026-10-02
 
 ### Fixed
